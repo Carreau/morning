@@ -20,8 +20,10 @@ import io
 import argparse
 
 import logging
-log = logging.getLogger()
-log.setLevel(10)
+log = logging.getLogger(__file__)
+
+logging.root.setLevel(logging.INFO)
+logging.root.addHandler(logging.StreamHandler())
 
 class _config(object):
 
@@ -46,38 +48,39 @@ def main():
     parser_list = subparsers.add_parser('list',help='')
     
 
-    parser_add.add_argument('dir')
+    parser_add.add_argument('dir', nargs='*', default=('.',))
 
     args = parser.parse_args()
-
-    if args.subcmd == 'dir':
-        directory = os.path.abspath(expanduser(args.dir))
-        if not os.path.isdir(directory):
-            sys.exit('%s is not a directory'%directory)
-        with _config() as config:
-            if not 'mornings' in config.sections():
-                config['mornings'] = {}
-            config['mornings'][directory] = 'true'
+    if args.subcmd == 'add':
+        for dr in args.dir:
+            directory = os.path.abspath(expanduser(dr))
+            if not os.path.isdir(directory):
+                log.warn('%s is not a directory'%directory)
+                continue
+            if not os.path.isdir(os.path.join(directory,'.git')):
+                log.warn('%s is not a git directory'%directory)
+                continue
+            log.info('adding %s to list of git repos to update'%str(directory))
+            with _config() as config:
+                if not 'mornings' in config.sections():
+                    config['mornings'] = {}
+                config['mornings'][directory] = 'true'
 
     elif args.subcmd == 'list':
         with _config() as config:
             for k in config['mornings'].keys():
-                print(k)
+                log.info(k)
                 log.debug('%s' %(k))
 
     else :
-        from subprocess import Popen
+        from subprocess import Popen, run, DEVNULL
         log.info('no arguments, will update all things.')
         with _config() as config:
             for k in config['mornings'].keys():
-                print('will update git in {}'.format(k))
-                Popen(['git','fetch','origin'],cwd=k)
+                log.info('will update git in {}'.format(k))
+                run(['git','fetch','origin'],cwd=k, stdout=DEVNULL, stderr=DEVNULL)
 
 
-
-
-        
-    
 
 
 
