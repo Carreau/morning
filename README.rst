@@ -19,8 +19,52 @@ in the morning on my computer. That is to say :
     - Make sure they are on master:
         - If they are, and can be fast-forwarded, do it and potentially asking me wether or not
 
+installing morning
+------------------
 
-How it shoudl look like:
+.. note::
+
+    I'm using Python 3.5 HEAD, and I plan to try to use subprocess.run, so it might not run for you. 
+
+.. code::
+    pip install morning
+
+
+Using morning
+-------------
+
+.. code::
+
+    $ cd this/is/a/git/backed/project
+    $ mornign add . 
+    adding /Users/bussonniermatthias/this/is/a/git/backed/project to list of git repos to update
+
+.. code::
+
+    $ morning list
+    /users/bussonniermatthias/dev/flit
+    /users/bussonniermatthias/dev/ipython
+    /users/bussonniermatthias/dev/ipython_genutils
+    /users/bussonniermatthias/dev/ipython_kernel
+    /users/bussonniermatthias/dev/jupyter_client
+    /users/bussonniermatthias/dev/jupyter_core
+    /users/bussonniermatthias/dev/jupyter_nbconvert
+    /users/bussonniermatthias/dev/jupyter_nbformat
+    /users/bussonniermatthias/dev/jupyter_notebook
+    /users/bussonniermatthias/dev/morning
+    /users/bussonniermatthias/dev/brackets-visualtabs
+
+Updating all these git repos:
+
+.. code::
+    $ morning
+
+
+End Target:
+-----------
+
+
+How it should look like:
 
 .. code::
     ~/dev $ morning
