@@ -14,6 +14,7 @@ version = __version__
 
 import sys
 import os
+import re
 from os.path import expanduser
 import configparser
 import io
@@ -73,12 +74,26 @@ def main():
                 log.debug('%s' %(k))
 
     else :
-        from subprocess import Popen, run, DEVNULL
-        log.info('no arguments, will update all things.')
+        from subprocess import Popen, run, DEVNULL, PIPE
+        log.info('no arguments, will update all the things.')
         with _config() as config:
             for k in config['mornings'].keys():
-                log.info('will update git in {}'.format(k))
-                run(['git','fetch','origin'],cwd=k, stdout=DEVNULL, stderr=DEVNULL)
+                #log.info('will update git in {}'.format(k))
+                res = run(['git','fetch','origin'],cwd=k, stdout=PIPE, stderr=PIPE)
+                res = run('git rev-parse --abbrev-ref HEAD'.split(), cwd=k, stdout=PIPE, stderr=PIPE)
+                branch = res.stdout.decode().strip()
+                res = run('git status -sb --porcelain'.split(), cwd=k, stdout=PIPE, stderr=PIPE)
+                m = re.findall('behind ([0-9]+)', res.stdout.splitlines()[0].decode());
+                behind = int(m[0]) if m else 0
+                m = re.findall('ahead ([0-9]+)', res.stdout.splitlines()[0].decode());
+                ahead = int(m[0]) if m else 0
+                if behind and not ahead and branch == 'master':
+                    extra = 'can be ff'
+                else:
+                    extra = ''
+
+                log.info('%s, on branch %s, -%02d,+%02d, %s' %(k,branch, behind, ahead, extra))
+
 
 
 
