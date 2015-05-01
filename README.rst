@@ -54,10 +54,23 @@ Using morning
     /users/bussonniermatthias/dev/morning
     /users/bussonniermatthias/dev/brackets-visualtabs
 
+
+
+
 Updating all these git repos:
 
 .. code::
     $ morning
+
+
+# auto-fast-forward
+
+use the following to tell morning to automatically
+fast forward your repo if on master, and behind origin.
+
+.. code::
+
+    $ git config morning.fast-forward True
 
 
 End Target:

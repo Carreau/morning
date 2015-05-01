@@ -8,7 +8,7 @@ Targeted as updating git repos.
 
 __author__ = 'Matthias Bussonnier'
 __email__ = 'bussonniermatthias@gmail.com'
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 version = __version__
 
