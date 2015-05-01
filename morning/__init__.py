@@ -22,6 +22,7 @@ import argparse
 
 import logging
 log = logging.getLogger(__file__)
+console=log
 
 logging.root.setLevel(logging.INFO)
 logging.root.addHandler(logging.StreamHandler())
@@ -46,12 +47,14 @@ def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(title='subcommands', dest='subcmd')
     parser_add = subparsers.add_parser('add',help='')
+    parser_status = subparsers.add_parser('status',help='')
     parser_list = subparsers.add_parser('list',help='')
     
 
     parser_add.add_argument('dir', nargs='*', default=('.',))
 
     args = parser.parse_args()
+
     if args.subcmd == 'add':
         for dr in args.dir:
             directory = os.path.abspath(expanduser(dr))
@@ -73,26 +76,46 @@ def main():
                 log.info(k)
                 log.debug('%s' %(k))
 
+    elif args.subcmd == 'status':
+        status()
     else :
-        from subprocess import Popen, run, DEVNULL, PIPE
+        status(gfo=True)
         log.info('no arguments, will update all the things.')
-        with _config() as config:
-            for k in config['mornings'].keys():
-                #log.info('will update git in {}'.format(k))
-                res = run(['git','fetch','origin'],cwd=k, stdout=PIPE, stderr=PIPE)
-                res = run('git rev-parse --abbrev-ref HEAD'.split(), cwd=k, stdout=PIPE, stderr=PIPE)
-                branch = res.stdout.decode().strip()
-                res = run('git status -sb --porcelain'.split(), cwd=k, stdout=PIPE, stderr=PIPE)
-                m = re.findall('behind ([0-9]+)', res.stdout.splitlines()[0].decode());
-                behind = int(m[0]) if m else 0
-                m = re.findall('ahead ([0-9]+)', res.stdout.splitlines()[0].decode());
-                ahead = int(m[0]) if m else 0
-                if behind and not ahead and branch == 'master':
-                    extra = 'can be ff'
-                else:
-                    extra = ''
 
-                log.info('%s, on branch %s, -%02d,+%02d, %s' %(k,branch, behind, ahead, extra))
+def status(gfo=False):
+    from subprocess import Popen, run, DEVNULL, PIPE
+    with _config() as config:
+        for k in config['mornings'].keys():
+            #log.info('will update git in {}'.format(k))
+            fast_forward = False
+            if gfo:
+                res = run(['git','fetch','origin'],cwd=k, stdout=PIPE, stderr=PIPE)
+                if res.returncode is not 0 :
+                    log.error("could not fetch %s"%k)
+                    continue
+                c = configparser.ConfigParser()
+                c.read(os.path.join(k,'.git/config'))
+                fast_forward = (c.get('morning', 'fast-forward', fallback=None) == 'True')
+                log.debug("configured for auto fast-forward %s" % fast_forward)
+            res = run('git rev-parse --abbrev-ref HEAD'.split(), cwd=k, stdout=PIPE, stderr=PIPE)
+            branch = res.stdout.decode().strip()
+            res = run('git status -sb --porcelain'.split(), cwd=k, stdout=PIPE, stderr=PIPE)
+            m = re.findall('behind ([0-9]+)', res.stdout.splitlines()[0].decode());
+            behind = int(m[0]) if m else 0
+            m = re.findall('ahead ([0-9]+)', res.stdout.splitlines()[0].decode());
+            ahead = int(m[0]) if m else 0
+            if behind and not ahead and branch == 'master':
+                extra = 'can be fast-forwarded'
+                if fast_forward: 
+                    log.debug('is ffding')
+                    res = run(['git','merge','origin/master','--ff-only'], cwd=k, stdout=PIPE, stderr=PIPE)
+                    if res.returncode is not 0 :
+                        log.error(res.stderr.decode())
+                    extra = ' [fast-forwarded]'
+            else:
+                extra = ''
+
+            log.info('{:50s} on branch {:7s} -{:02d},+{:02d}, {:s}'.format(k,branch, behind, ahead, extra))
 
 
 
