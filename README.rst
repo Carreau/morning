@@ -1,7 +1,3 @@
-===============================
-morning
-===============================
-
 .. image:: https://badge.fury.io/py/morning.png
     :target: http://badge.fury.io/py/morning
 
