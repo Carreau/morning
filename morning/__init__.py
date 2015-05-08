@@ -114,6 +114,8 @@ def status(gfo=False):
                     extra = ' [fast-forwarded]'
             else:
                 extra = ''
+            res = run(['travis','status','--no-interactive'],cwd=k, stdout=PIPE, stderr=PIPE)
+            extra = extra + res.stdout.decode().split('\n')[0]
 
             log.info('{:50s} on branch {:7s} -{:02d},+{:02d}, {:s}'.format(k,branch, behind, ahead, extra))
 
